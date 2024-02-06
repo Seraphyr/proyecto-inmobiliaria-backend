@@ -28,6 +28,26 @@ app.get('/api/inmuebles', async (req, res) => {
     res.json(inmuebles);
 });
 
+app.get('/api/inmuebles/info', async (req, res) => {
+    let cantidadInmuebles = await knex('inmuebles').count('id as count').first();
+    let timestamp = new Date().toLocaleString();
+    const message = `Cantidad de inmuebles existentes: ${cantidadInmuebles.count}. Consulta realizada en: ${timestamp}`;
+    res.send(message);
+});
+
+app.get('/api/inmuebles/filtro', async (req, res) => {
+    const { metrosCuadrados, precio } = req.body;
+    const filteredInmuebles = await knex('inmuebles').where(builder => {
+        if (metrosCuadrados) {
+            builder.where('metrosCuadrados', metrosCuadrados);
+        }
+        if (precio) {
+            builder.where('precio', precio);
+        }
+    });
+    res.json(filteredInmuebles);
+});
+
 app.get('/api/inmuebles/:id', async (req, res) => {
     const { id } = req.params;
     const inmueble = await knex('inmuebles').where({ id }).first();
@@ -42,6 +62,22 @@ app.post('/api/inmuebles/nuevo', async (req, res) => {
     const nuevoInmueble = req.body;
     const inmueble = await knex('inmuebles').insert(nuevoInmueble).into('inmuebles').returning('*');
     res.json(inmueble);
+});
+
+app.post('/api/registro', async (req, res) => {
+    const userData = req.body;
+    await knex('usuarios').insert(userData);
+    res.json({ message: 'Usuario registrado exitosamente' });
+});
+
+app.post('/api/login', async (req, res) => {
+    const { nombre, clave } = req.body;
+    const user = await knex('usuarios').where({ nombre, clave }).first();
+    if (user) {
+        res.json({ message: 'Usuario autenticado', user });
+    } else {
+        res.status(401).json({ message: 'Autenticación fallida' });
+    }
 });
 
 app.put('/api/inmuebles/editar/:id', async (req, res) => {
@@ -59,19 +95,8 @@ app.delete('/api/inmuebles/eliminar/:id', async (req, res) => {
     res.json(remainingInmuebles);
 });
 
-/* app.get('/api/inmuebles/filtro', async (req, res) => {
-    const { metrosCuadrados, precio } = req.body;
-    const filteredInmuebles = await knex('inmuebles').where(builder => {
-        if (metrosCuadrados) {
-            builder.where('metrosCuadrados', metrosCuadrados);
-        }
-        if (precio) {
-            builder.where('precio', precio);
-        }
-    });
-    res.json(filteredInmuebles);
-});
- */
+
+
 app.get('/api/inmuebles/filtro', async (req, res) => {
     const metrosCuadrados = req.body.metrosCuadrados;
     const precioVenta = req.body.precioVenta;
@@ -80,12 +105,7 @@ app.get('/api/inmuebles/filtro', async (req, res) => {
 });
 
 
-/* app.get('/api/inmuebles/info', async (req, res) => {
-    let cantidadInmuebles = await knex('inmuebles').count('id as count').first();
-    let timestamp = new Date().toLocaleString();
-    const message = `Cantidad de inmuebles existentes: ${cantidadInmuebles.count}. Consulta realizada en: ${timestamp}`;
-    res.send(message);
-}); */
+
 
 app.listen(port, () => {
     console.log(`Servidor escuchando en http://localhost:${port}`);
