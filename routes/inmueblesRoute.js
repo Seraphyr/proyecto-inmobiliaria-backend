@@ -3,23 +3,24 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const knex = require('../config/knexfile');
 const { JWT_TOKEN } = require('../middlewares/authUser');
+const { validarPermisos, permisos} = require('../middlewares/permisos');
 
 
 
 
-router.get('/', async (req, res) => {
+router.get('/', validarPermisos(permisos.ADMIN),     async (req, res) => {
     const inmuebles = await knex('inmuebles').select('*');
     res.json(inmuebles);
 });
 
-router.get('/info', async (req, res) => {
+router.get('/info',validarPermisos(permisos.ADMIN), async (req, res) => {
     let cantidadInmuebles = await knex('inmuebles').count('id as count').first();
     let timestamp = new Date().toLocaleString();
     const message = `Cantidad de inmuebles existentes: ${cantidadInmuebles.count}. Consulta realizada en: ${timestamp}`;
     res.send(message);
 });
 
-router.get('/filtro', async (req, res) => {
+router.get('/filtro',validarPermisos(permisos.ADMIN), async (req, res) => {
     const { metrosCuadrados, precio } = req.body;
     const filteredInmuebles = await knex('inmuebles').where(builder => {
         if (metrosCuadrados) {
@@ -32,7 +33,7 @@ router.get('/filtro', async (req, res) => {
     res.json(filteredInmuebles);
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id',validarPermisos(permisos.ADMIN), async (req, res) => {
     const { id } = req.params;
     const inmueble = await knex('inmuebles').where({ id }).first();
     if (inmueble) {
@@ -42,14 +43,14 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-router.post('/nuevo', async (req, res) => {
+router.post('/nuevo',validarPermisos(permisos.ADMIN), async (req, res) => {
     const nuevoInmueble = req.body;
     const inmueble = await knex('inmuebles').insert(nuevoInmueble).into('inmuebles').returning('*');
     res.json(inmueble);
 });
 
 
-router.put('/editar/:id', async (req, res) => {
+router.put('/editar/:id',validarPermisos(permisos.ADMIN), async (req, res) => {
     const { id } = req.params;
     const updatedAttributes = req.body;
     await knex('inmuebles').where({ id }).update(updatedAttributes);
@@ -57,7 +58,7 @@ router.put('/editar/:id', async (req, res) => {
     res.json(updatedInmueble);
 });
 
-router.delete('/eliminar/:id', async (req, res) => {
+router.delete('/eliminar/:id',validarPermisos(permisos.ADMIN), async (req, res) => {
     const { id } = req.params;
     await knex('inmuebles').where({ id }).del();
     const remainingInmuebles = await knex('inmuebles').select('*');
@@ -65,12 +66,5 @@ router.delete('/eliminar/:id', async (req, res) => {
 });
 
 
-/* 
-router.get('/filtro', async (req, res) => {
-    const metrosCuadrados = req.body.metrosCuadrados;
-    const precioVenta = req.body.precioVenta;
-    const result = await knex('inmuebles').select('*').where('metrosCuadrados', '=', metrosCuadrados).andWhere('precioVenta', '=', precioVenta);
-    res.json(result);
-});  */
 
 module.exports = router;

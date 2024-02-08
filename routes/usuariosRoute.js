@@ -20,9 +20,12 @@ router.post('/login', async (req, res) => {
   
 
 router.post('/registro', async (req, res) => {
-    const userData = req.body;
-    await knex('usuarios').insert(userData);
-    res.json({ message: 'Usuario registrado exitosamente' });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(req.body.clave, salt);
+    const userData = { ...req.body, clave: hashedPassword };
+    const userId = await knex('usuarios').insert(userData).returning('id');
+    res.json({ message: 'Usuario registrado exitosamente', userId });
 });
+   
 
 module.exports = router;
