@@ -2,7 +2,10 @@ const express = require('express');
 const route = express.Router();
 const jwt = require('jsonwebtoken');
 const usuarios = require('../routes/usuariosRoute');
-const knex = require('../config/knexfile');
+const knex = require('knex');
+const knexConfig = require('../config/knexfile');
+const db = knex(knexConfig.development);
+
 
 const permisos = {
     ADMIN : 1,

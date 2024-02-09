@@ -1,7 +1,9 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const knex = require('../config/knexfile');
+const knex = require('knex');
+const knexConfig = require('../config/knexfile');
+const db = knex(knexConfig.development);
 const { JWT_TOKEN } = require('../middlewares/authUser');
 const { validarPermisos, permisos} = require('../middlewares/permisos');
 
