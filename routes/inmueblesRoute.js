@@ -46,26 +46,32 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/nuevo', async (req, res) => {
-    const nuevoInmueble = req.body;
-    const inmueble = await db('inmuebles').insert(nuevoInmueble).into('inmuebles').returning('*');
-    res.json(inmueble);
+    const inmueble = req.body;
+    await db('inmuebles').insert(inmueble);
+    res.json({creado: true});
 });
 
 
 router.put('/editar/:id', async (req, res) => {
     const { id } = req.params;
-    const updatedAttributes = req.body;
-    await db('inmuebles').where({ id }).update(updatedAttributes);
+    const inmueble = req.body;
+    await db('inmuebles').where({ id }).update(inmueble);
     const updatedInmueble = await db('inmuebles').where({ id }).first();
-    res.json(updatedInmueble);
+    res.json({ editado: true, inmueble: updatedInmueble });
 });
+
 
 router.delete('/eliminar/:id', async (req, res) => {
     const { id } = req.params;
-    await db('inmuebles').where({ id }).del();
-    const remainingInmuebles = await db('inmuebles').select();
-    res.json(remainingInmuebles);
-});
+    const idAsInt = parseInt(id, 10);
+    if (!isNaN(idAsInt)) {
+      await db('inmuebles').where({ id: idAsInt }).del();
+      const remainingInmuebles = await db('inmuebles').select();
+      res.json(remainingInmuebles);
+    } else {
+      res.status(400).json({ error: 'El ID proporcionado no es un número entero válido.' });
+    }
+  });
 
 
 
